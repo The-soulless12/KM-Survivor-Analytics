@@ -98,10 +98,65 @@ data <- data %>%
   left_join(epreuves_solo_par_saison, by = "Saison") %>%
   mutate(Nb_solo_epreuves = as.numeric(epreuves_solo) / Total_Epreuves_Solo)
 
-# --------------------------------------- Les colonnes Non utilisables pour l'analyse
-data_old <- data # Sauvegarde du tableau pour plus tard
+# --------------------------------------- Nettoyage des colonnes inutilisables
 data <- data %>%
-  select(-Nom, -Already, -Saison, -Team, -Swap_Team, -Joueur, -Avantages, -Score_indiv,
-         -Total_Saison, -epreuves_solo, -Total_Epreuves_Solo)
+  select(-Nom, -Already, -Avantages, -Score_indiv, -Total_Saison, -epreuves_solo,
+         -Total_Epreuves_Solo)
 
-View(data)
+# --------------------------------------- Analyse en composantes principales
+# On transforme les colonnes en valeurs quantitatives
+data$Merge <- as.numeric(data$Merge)
+data$epreuves_team <- as.numeric(data$epreuves_team)
+data$Note_strategie <- as.numeric(data$Note_strategie)
+data$Note_social <- as.numeric(data$Note_social)
+data$Note_epreuves <- as.numeric(data$Note_epreuves)
+
+ACP <- PCA(data %>% select(-Joueur, -Saison, -Team, -Swap_Team), scale.unit = TRUE, graph = FALSE)
+
+# Les valeurs propres + Inerties 
+val_propres <- ACP$eig
+print(val_propres)
+fviz_screeplot(ACP, addlabels = TRUE, ylim = c(0, 50))
+
+# Projection des individus
+p <- fviz_pca_ind(ACP, 
+                  geom.ind = "point",     
+                  col.ind = "blue",       
+                  label = "none",   
+                  title = "Projection des joueurs"
+)
+#p <- p + geom_text(aes(x = ACP$ind$coord[, 1], 
+                   #y = ACP$ind$coord[, 2], 
+                   #label = data$Joueur), 
+                   #vjust = -1, 
+                   #color = "orange", 
+                   #size = 4)
+print(p)
+
+# Contributions des individus pour les 2 premiers axes
+fviz_contrib(ACP, choice = "ind", axes = 1, top = 10)
+fviz_contrib(ACP, choice = "ind", axes = 2, top = 10)
+
+# Projections des variables 
+fviz_pca_var(ACP, 
+             col.var = "black", 
+             axes = c(1, 2), 
+             addlabels = TRUE, 
+             legend.title = "¨Projections des variables"
+)
+
+# Contributions des variables pour les 5 premiers axes
+fviz_contrib(ACP, choice = "var", axes = 1, top = 10)
+fviz_contrib(ACP, choice = "var", axes = 2, top = 10)
+
+# Positionnement sur le nuage 
+players <- data %>% filter(Classement == 1) %>% pull(Joueur)
+
+for (name in players) {
+  index <- which(data$Joueur == name) 
+  coord <- ACP$ind$coord[index, ] 
+  
+  p <- p + 
+    annotate("point", x = coord[1], y = coord[2], color = "red", size = 4) +
+    annotate("text", x = coord[1], y = coord[2], label = name, vjust = -1, color = "red")
+}
