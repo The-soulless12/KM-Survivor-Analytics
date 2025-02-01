@@ -258,7 +258,9 @@ som_grid <- somgrid(xdim = 5, ydim = 5, topo = "hexagonal")
 som_model <- som(data_som, grid = som_grid, rlen = 100, alpha = c(0.05, 0.01))
 
 # Carte des Clusters
-plot(som_model, type = "mapping", labels = data$Joueur, col = "blue", main = "Carte des Clusters")
+plot(som_model, type = "mapping", col = "white", main = "Carte des Clusters")
+neurone_coords <- som_model$grid$pts
+text(neurone_coords[, 1], neurone_coords[, 2], labels = recap_SOM$ID_Neurone, col = "red", cex = 1.2)
 # Carte des Poids
 plot(som_model, type = "codes", main = "Carte des Poids")
 # Carte des Densités
@@ -275,4 +277,3 @@ recap_SOM <- affectes_par_neurone %>%
   summarise(Joueurs = paste(Joueur, collapse = ", "), .groups = 'drop')
 
 View(recap_SOM)
-
