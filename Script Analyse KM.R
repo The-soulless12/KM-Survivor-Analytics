@@ -121,10 +121,11 @@ fviz_screeplot(ACP, addlabels = TRUE, ylim = c(0, 50))
 # Projection des individus
 p <- fviz_pca_ind(ACP, 
                   geom.ind = "point",     
-                  col.ind = "blue",       
+                  col.ind = "black",       
                   label = "none",   
                   title = "Projection des joueurs"
 )
+# Si on veut afficher le nom des joueurs, on décommente la partie ci dessous
 #p <- p + geom_text(aes(x = ACP$ind$coord[, 1], 
                    #y = ACP$ind$coord[, 2], 
                    #label = data$Joueur), 
@@ -132,10 +133,6 @@ p <- fviz_pca_ind(ACP,
                    #color = "orange", 
                    #size = 4)
 print(p)
-
-# Contributions des individus pour les 2 premiers axes
-fviz_contrib(ACP, choice = "ind", axes = 1, top = 10)
-fviz_contrib(ACP, choice = "ind", axes = 2, top = 10)
 
 # Projections des variables 
 fviz_pca_var(ACP, 
@@ -145,18 +142,69 @@ fviz_pca_var(ACP,
              legend.title = "¨Projections des variables"
 )
 
-# Contributions des variables pour les 5 premiers axes
-fviz_contrib(ACP, choice = "var", axes = 1, top = 10)
-fviz_contrib(ACP, choice = "var", axes = 2, top = 10)
-
-# Positionnement sur le nuage 
-players <- data %>% filter(Classement == 1) %>% pull(Joueur)
-
-for (name in players) {
-  index <- which(data$Joueur == name) 
-  coord <- ACP$ind$coord[index, ] 
+# Positionnement sur le nuage des individus
+# Affichage des joueurs par Saisons
+plots <- list()
+for (season in 1:9) {
+  s <- p + ggtitle(paste("Candidats de la saison ",season))
+  players <- data %>% filter(Saison == season) %>% pull(Joueur)
   
-  p <- p + 
-    annotate("point", x = coord[1], y = coord[2], color = "red", size = 4) +
-    annotate("text", x = coord[1], y = coord[2], label = name, vjust = -1, color = "red")
+  for (name in players) {
+    index <- which(data$Joueur == name) 
+    coord <- ACP$ind$coord[index, ] 
+    
+    s <- s + 
+      annotate("point", x = coord[1], y = coord[2], color = "red", size = 4) +
+      annotate("text", x = coord[1], y = coord[2], label = name, vjust = -1, color = "red")
+  }
+  plots[[season]] <- s
+  print(s)
+}
+
+# Affichage des joueurs par Equipe
+season_colors <- list(
+  "1" = list("Macao" = "red", "Nayoco" = "blue"),
+  "2" = list("Kayac" = "red", "Ekeloa" = "blue", "Tao" = "yellow"),
+  "3" = list("Benjoh" = "red", "Lantakoh" = "yellow"),
+  "3_Swap" = list("Scols" = "blue", "Himath" = "purple"),
+  "4" = list("Tingi" = "green", "Vanai" = "red", "Kentoh" = "blue", "Mattai" = "yellow"),
+  "4_Swap" = list("Lampan" = "orange", "Wakpan" = "purple"),
+  "5" = list("Vilains" = "red", "Heros" = "blue"),
+  "5_Swap" = list("Legendes" = "yellow", "Icones" = "purple"),
+  "6" = list("Vepo" = "blue", "Midac" = "yellow", "Owtia" = "red"),
+  "6_Swap" = list("Macayoco" = "orange", "Ratvan" = "green", "Lambok" = "purple"),
+  "7" = list("Juwai" = "blue", "Palampan" = "orange"),
+  "7_Swap" = list("Makunbo" = "grey", "Shawai" = "red"),
+  "8" = list("Lokais" = "blue", "Oro" = "yellow"),
+  "8_Swap" = list("Voompai" = "brown", "Pitjan" = "red"),
+  "9" = list("Vedi" = "green", "Sillow" = "purple"),
+  "9_Swap" = list("Yighi" = "yellow", "Tampala" = "blue")
+)
+
+for (season in 1:9) {
+  for (type in c("Team", "Swap_Team")) {
+    key <- ifelse(type == "Team", as.character(season), paste0(season, "_Swap"))
+    if (!key %in% names(season_colors)) next
+    
+    s <- p + ggtitle(paste("Candidats de la saison", season, "-", type))
+    players <- data %>% filter(Saison == season) %>% pull(Joueur)
+    
+    for (name in players) {
+      index <- which(data$Joueur == name)
+      coord <- ACP$ind$coord[index, ]
+      team <- data[[type]][index]  # Récupération de la bonne colonne
+      
+      if (length(team) > 1) {
+        team <- team[1]
+      }
+      color <- ifelse(team %in% names(season_colors[[key]]), season_colors[[key]][[team]], "black")
+      
+      s <- s + 
+        annotate("point", x = coord[1], y = coord[2], color = color, size = 4) +
+        annotate("text", x = coord[1], y = coord[2], label = name, vjust = -1, color = color)
+    }
+    
+    plots[[length(plots) + 1]] <- s
+    print(s)
+  }
 }
