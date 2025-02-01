@@ -3,6 +3,8 @@ library(factoextra)
 library(readxl)
 library(dplyr)
 library(tidyr)
+library(dbscan)
+library(kohonen)
 
 getwd()
 setwd("C:/Users/admin/Documents/RAYANE DOSSIER ETUDES/KM-Survivor-Analytics")
@@ -83,9 +85,7 @@ data <- data %>%
 
 # --------------------------------------- Gestion de la colonne Swap_Team
 data <- data %>%
-  mutate(
-    Swap = ifelse(Swap_Team == "None", 0, 1)
-  )
+  mutate(Swap = ifelse(Swap_Team == "None", 0, 1))
 
 # --------------------------------------- Gestion de la colonne Epreuves_solo
 # Calcul du total des épreuves solo par saison
@@ -102,6 +102,8 @@ data <- data %>%
 data <- data %>%
   select(-Nom, -Already, -Avantages, -Score_indiv, -Total_Saison, -epreuves_solo,
          -Total_Epreuves_Solo)
+
+View(data)
 
 # --------------------------------------- Analyse en composantes principales
 # On transforme les colonnes en valeurs quantitatives
@@ -141,6 +143,13 @@ fviz_pca_var(ACP,
              addlabels = TRUE, 
              legend.title = "¨Projections des variables"
 )
+
+# Extraction des projections des variables
+projections_variables <- data.frame(Variable = rownames(ACP$var$coord),
+                                    Axe1 = ACP$var$coord[, 1],
+                                    Axe2 = ACP$var$coord[, 2])
+projections_variables$Variable <- NULL
+print(projections_variables)
 
 # Positionnement sur le nuage des individus
 # Affichage des joueurs par Saisons
@@ -208,3 +217,62 @@ for (season in 1:9) {
     print(s)
   }
 }
+
+# --------------------------------------- Clustering par densité DBSCAN
+data_clustering <- data %>%
+  select(Merge, Classement, epreuves_team, Note_strategie, Note_social,
+         Note_avantages, Swap, Nb_solo_epreuves, Note_epreuves) %>%
+  scale()  # Normalisation des données
+
+# On détermine la valeur de EPS via la méthode du coude
+kNNdistplot(data_clustering, k = 9) # MINPTS = Nb variables
+abline(h = 0.3, col = "red", lty = 2) 
+# Après avoir déterminé le coude, EPS = 2
+
+dbscan_result <- dbscan(data_clustering, eps = 2, minPts = 9)
+data$cluster <- as.factor(dbscan_result$cluster)
+
+p_dbscan <- fviz_pca_ind(ACP, 
+                         geom.ind = "point",     
+                         col.ind = data$cluster,
+                         label = "none",   
+                         title = "Clustering DBSCAN des joueurs"
+)
+print(p_dbscan)
+
+# Récapitulatif
+recap_DBSCAN <- data %>%
+  group_by(cluster) %>%
+  summarise(Joueurs = paste(Joueur, collapse = ", "), .groups = 'drop')
+
+View(recap_DBSCAN)
+
+# --------------------------------------- Cartes Auto-Organisatrices SOM
+data_som <- data %>%
+  select(-Joueur, -Saison, -Team, -Swap_Team) %>%
+  mutate(across(everything(), as.numeric)) %>%
+  scale()  # Normalisation des données
+
+# Définition de la grille SOM
+som_grid <- somgrid(xdim = 5, ydim = 5, topo = "hexagonal")
+som_model <- som(data_som, grid = som_grid, rlen = 100, alpha = c(0.05, 0.01))
+
+# Carte des Clusters
+plot(som_model, type = "mapping", labels = data$Joueur, col = "blue", main = "Carte des Clusters")
+# Carte des Poids
+plot(som_model, type = "codes", main = "Carte des Poids")
+# Carte des Densités
+plot(som_model, type = "counts", main = "Carte des Densités")
+# Carte des Distances
+plot(som_model, type = "dist.neighbours", main = "Carte des Distances")
+
+# Récapitulatif 
+affectation_neurone <- som_model$unit.classif
+affectes_par_neurone <- data.frame(Neurone = 1:length(affectation_neurone), Joueur = data$Joueur, ID_Neurone = affectation_neurone)
+
+recap_SOM <- affectes_par_neurone %>%
+  group_by(ID_Neurone) %>%
+  summarise(Joueurs = paste(Joueur, collapse = ", "), .groups = 'drop')
+
+View(recap_SOM)
+
