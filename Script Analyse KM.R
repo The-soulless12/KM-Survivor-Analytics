@@ -5,6 +5,7 @@ library(dplyr)
 library(tidyr)
 library(dbscan)
 library(kohonen)
+library(openxlsx)
 
 getwd()
 setwd("C:/Users/admin/Documents/RAYANE DOSSIER ETUDES/KM-Survivor-Analytics")
@@ -127,29 +128,25 @@ p <- fviz_pca_ind(ACP,
                   label = "none",   
                   title = "Projection des joueurs"
 )
-# Si on veut afficher le nom des joueurs, on décommente la partie ci dessous
-#p <- p + geom_text(aes(x = ACP$ind$coord[, 1], 
-                   #y = ACP$ind$coord[, 2], 
-                   #label = data$Joueur), 
-                   #vjust = -1, 
-                   #color = "orange", 
-                   #size = 4)
 print(p)
+ggsave(paste0("./Graphiques/Résultats_ACP.png"), plot = p)
 
 # Projections des variables 
-fviz_pca_var(ACP, 
+r <- fviz_pca_var(ACP, 
              col.var = "black", 
              axes = c(1, 2), 
              addlabels = TRUE, 
              legend.title = "¨Projections des variables"
 )
+print(r)
+ggsave(paste0("./Graphiques/Cercle_corrélation.png"), plot = r)
 
-# Extraction des projections des variables
+# Valeurs des projections des variables
 projections_variables <- data.frame(Variable = rownames(ACP$var$coord),
                                     Axe1 = ACP$var$coord[, 1],
                                     Axe2 = ACP$var$coord[, 2])
-projections_variables$Variable <- NULL
 print(projections_variables)
+write.xlsx(projections_variables, file = "./Tableaux/projections_variables.xlsx")
 
 # Positionnement sur le nuage des individus
 # Affichage des joueurs par Saisons
@@ -168,6 +165,7 @@ for (season in 1:9) {
   }
   plots[[season]] <- s
   print(s)
+  ggsave(paste0("./Graphiques/joueurs_saison_", season, ".png"), plot = s)
 }
 
 # Affichage des joueurs par Equipe
@@ -215,6 +213,10 @@ for (season in 1:9) {
     
     plots[[length(plots) + 1]] <- s
     print(s)
+    filename <- ifelse(type == "Swap_Team", paste0("./Graphiques/equipes_swap_saison_", season, ".png"), 
+                       paste0("./Graphiques/equipes_saison_", season, ".png"))
+    
+    ggsave(filename, plot = s)
   }
 }
 
@@ -239,6 +241,7 @@ p_dbscan <- fviz_pca_ind(ACP,
                          title = "Clustering DBSCAN des joueurs"
 )
 print(p_dbscan)
+ggsave(paste0("./Graphiques/clustering_DBSCAN.png"), plot = p_dbscan)
 
 # Récapitulatif
 recap_DBSCAN <- data %>%
@@ -246,6 +249,7 @@ recap_DBSCAN <- data %>%
   summarise(Joueurs = paste(Joueur, collapse = ", "), .groups = 'drop')
 
 View(recap_DBSCAN)
+write.xlsx(recap_DBSCAN, file = "./Tableaux/recap_DBSCAN.xlsx")
 
 # --------------------------------------- Cartes Auto-Organisatrices SOM
 data_som <- data %>%
@@ -257,17 +261,6 @@ data_som <- data %>%
 som_grid <- somgrid(xdim = 5, ydim = 5, topo = "hexagonal")
 som_model <- som(data_som, grid = som_grid, rlen = 100, alpha = c(0.05, 0.01))
 
-# Carte des Clusters
-plot(som_model, type = "mapping", col = "white", main = "Carte des Clusters")
-neurone_coords <- som_model$grid$pts
-text(neurone_coords[, 1], neurone_coords[, 2], labels = recap_SOM$ID_Neurone, col = "red", cex = 1.2)
-# Carte des Poids
-plot(som_model, type = "codes", main = "Carte des Poids")
-# Carte des Densités
-plot(som_model, type = "counts", main = "Carte des Densités")
-# Carte des Distances
-plot(som_model, type = "dist.neighbours", main = "Carte des Distances")
-
 # Récapitulatif 
 affectation_neurone <- som_model$unit.classif
 affectes_par_neurone <- data.frame(Neurone = 1:length(affectation_neurone), Joueur = data$Joueur, ID_Neurone = affectation_neurone)
@@ -277,3 +270,23 @@ recap_SOM <- affectes_par_neurone %>%
   summarise(Joueurs = paste(Joueur, collapse = ", "), .groups = 'drop')
 
 View(recap_SOM)
+write.xlsx(recap_SOM, file = "./Tableaux/recap_SOM.xlsx")
+
+# Carte des Clusters
+png("Graphiques/carte_clusters.png")
+plot(som_model, type = "mapping", col = "white", main = "Carte des Clusters")
+neurone_coords <- som_model$grid$pts
+text(neurone_coords[, 1], neurone_coords[, 2], labels = recap_SOM$ID_Neurone, col = "red", cex = 1.2)
+dev.off()
+# Carte des Poids
+png("Graphiques/carte_poids.png")
+plot(som_model, type = "codes", main = "Carte des Poids")
+dev.off()
+# Carte des Densités
+png("Graphiques/carte_densites.png")
+plot(som_model, type = "counts", main = "Carte des Densités")
+dev.off()
+# Carte des Distances
+png("Graphiques/carte_distances.png")
+plot(som_model, type = "dist.neighbours", main = "Carte des Distances")
+dev.off()
