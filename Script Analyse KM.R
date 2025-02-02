@@ -8,7 +8,7 @@ library(kohonen)
 library(openxlsx)
 
 getwd()
-setwd("C:/Users/admin/Documents/RAYANE DOSSIER ETUDES/KM-Survivor-Analytics")
+# setwd("chemin absolu")
 
 # Lecture du fichier excel
 data <- read_excel("KM_data.xlsx")
