@@ -229,6 +229,7 @@
         const seasonFilter = document.getElementById('seasonFilter');
         const checkboxContainer = document.getElementById('checkboxContainer');
         const cardButtonsContainer = document.getElementById('cardButtonsContainer');
+        const defaultActiveButton = document.getElementById("cardPoids");
 
         allButtons.forEach(button => {
             button.addEventListener('click', () => {
@@ -244,17 +245,21 @@
                     image.setAttribute('href', './Graphiques/Résultats_ACP.png');
                     seasonFilter.value = ""; 
                     checkboxContainer.innerHTML = ''; 
+
                     filterContainer.style.display = 'block';
                     cardButtonsContainer.style.display = 'none';
                 } else if (button.id === 'btnDBSCAN') {
                     image.style.visibility = 'visible';
                     image.setAttribute('href', './Graphiques/clustering_DBSCAN.png');
+
                     filterContainer.style.display = 'none';
                     cardButtonsContainer.style.display = 'none'; 
                 } else if (button.id === 'btnSOM') {
                     image.style.visibility = 'visible';
                     image.setAttribute('href', './Graphiques/carte_poids.png');
-                    // LA JE VAIS DEVOIR FAIRE EN SORTE D INITIALISER LES BOUTONS SUR POIDS !!!!!
+                    cardButtons.forEach(button => button.classList.remove("active"));
+                    defaultActiveButton.classList.add("active");
+                    
                     filterContainer.style.display = 'none'; 
                     cardButtonsContainer.style.display = 'flex';
                 } else if (button.id === "btnDataset") {
