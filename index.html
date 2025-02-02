@@ -88,39 +88,7 @@
         .button-container button:hover {
             transform: scale(1.05); 
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); 
-        }
-
-        .bottom-container {
-            position: absolute;
-            bottom: 20px;
-            left: 150px;
-            padding: 15px;
-            background: white;
-            border: 2px solid #ddd;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        .bottom-container button {
-            font-family: 'Montserrat', sans-serif;
-            font-size: 14px;
-            padding: 10px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            background-color: #0078D4;
-            color: white;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .bottom-container button.active {
-            background-color: #ff35bc;
-        }
-
-        .bottom-container button:hover {
-            transform: scale(1.05); 
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); 
-        }
+        }     
 
         .filter-container {
             display: none;
@@ -217,13 +185,9 @@
         <button id="cardPoids" class="active">Carte Poids</button>
     </div>
 
-    <div class="bottom-container">
-        <button id="btnDataset">Voir le Dataset</button>
-    </div>
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.1/xlsx.full.min.js"></script>
     <script>
-        const allButtons = document.querySelectorAll('.button-container button, .bottom-container button');
+        const allButtons = document.querySelectorAll('.button-container button');
         const image = document.getElementById('image');
         const filterContainer = document.getElementById('filterContainer');
         const seasonFilter = document.getElementById('seasonFilter');
@@ -262,11 +226,6 @@
                     
                     filterContainer.style.display = 'none'; 
                     cardButtonsContainer.style.display = 'flex';
-                } else if (button.id === "btnDataset") {
-                    image.style.visibility = 'hidden';
-                    filterContainer.style.display = 'none'; 
-                    cardButtonsContainer.style.display = 'none';
-                    //c'est là que je dois afficher le KM_data.xlsx
                 } else {
                     image.style.visibility = 'hidden';
                     filterContainer.style.display = 'none'; 
