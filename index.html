@@ -93,7 +93,7 @@
         .bottom-container {
             position: absolute;
             bottom: 20px;
-            left: 140px;
+            left: 150px;
             padding: 15px;
             background: white;
             border: 2px solid #ddd;
@@ -145,6 +145,40 @@
             margin-left: 10px;
         }
 
+        .card-buttons-container {
+            position: absolute;
+            left: 140px;  
+            top: calc(3.5vh + 190px);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 15px;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-buttons-container button {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 14px;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #0078D4;
+            color: white;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .card-buttons-container button.active {
+            background-color: #ff35bc;
+        }
+
+        .card-buttons-container button:hover {
+            transform: scale(1.05); 
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
+        }
     </style>
 </head>
 <body>
@@ -176,6 +210,13 @@
         <div id="checkboxContainer" class="filter-options"></div>
     </div>
 
+    <div id="cardButtonsContainer" class="card-buttons-container" style="display: none;">
+        <button id="cardCluster">Carte par Cluster</button>
+        <button id="cardDensity">Carte par Densité</button>
+        <button id="cardDistances">Carte Distances</button>
+        <button id="cardPoids" class="active">Carte Poids</button>
+    </div>
+
     <div class="bottom-container">
         <button id="btnDataset">Voir le Dataset</button>
     </div>
@@ -187,12 +228,10 @@
         const filterContainer = document.getElementById('filterContainer');
         const seasonFilter = document.getElementById('seasonFilter');
         const checkboxContainer = document.getElementById('checkboxContainer');
-        const initialTeamCheckbox = document.getElementById('initialTeamSeparator');
-        const swapTeamCheckbox = document.getElementById('swapTeamSeparator');
+        const cardButtonsContainer = document.getElementById('cardButtonsContainer');
 
         allButtons.forEach(button => {
             button.addEventListener('click', () => {
-                // On ne peut cliquer que sur un seul bouton à la fois
                 if (button.classList.contains('active')) {
                     button.classList.remove('active');
                 } else {
@@ -200,18 +239,43 @@
                     button.classList.add('active');
                 }
 
-                // Si le bouton ACP est cliqué, afficher l'image et le filtre
                 if (button.id === 'btnACP') {
                     image.style.visibility = 'visible';
                     image.setAttribute('href', './Graphiques/Résultats_ACP.png');
                     filterContainer.style.display = 'block';
+                    cardButtonsContainer.style.display = 'none';
                 } else if (button.id === 'btnDBSCAN') {
                     image.style.visibility = 'visible';
                     image.setAttribute('href', './Graphiques/clustering_DBSCAN.png');
+                    filterContainer.style.display = 'none';
+                    cardButtonsContainer.style.display = 'none'; 
+                } else if (button.id === 'btnSOM') {
+                    image.style.visibility = 'visible';
+                    image.setAttribute('href', './Graphiques/carte_poids.png');
                     filterContainer.style.display = 'none'; 
+                    cardButtonsContainer.style.display = 'flex';
                 } else {
                     image.style.visibility = 'hidden';
                     filterContainer.style.display = 'none'; 
+                    cardButtonsContainer.style.display = 'none';
+                }
+            });
+        });
+
+        const cardButtons = document.querySelectorAll('#cardButtonsContainer button');
+        cardButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                cardButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+
+                if (button.id === 'cardPoids') {
+                    image.setAttribute('href', './Graphiques/carte_poids.png');
+                } else if (button.id === 'cardCluster') {
+                    image.setAttribute('href', './Graphiques/carte_clusters.png');
+                } else if (button.id === 'cardDensity') {
+                    image.setAttribute('href', './Graphiques/carte_densites.png');
+                } else if (button.id === 'cardDistances') {
+                    image.setAttribute('href', './Graphiques/carte_distances.png');
                 }
             });
         });
@@ -220,7 +284,6 @@
             const season = seasonFilter.value;
             image.setAttribute('href', `./Graphiques/joueurs_saison_${season}.png`);
 
-            // Afficher les cases à cocher selon la saison sélectionnée
             checkboxContainer.innerHTML = ''; 
             if (season == 1 || season == 2) {
                 checkboxContainer.innerHTML = `
@@ -233,10 +296,10 @@
                     <label><input type="checkbox" id="initialTeamSeparator"> Équipes initiales </label>
                     <label><input type="checkbox" id="swapTeamSeparator"> Équipes Swap</label>
                 `;
-
+                
                 const initialTeamCheckbox = document.getElementById('initialTeamSeparator');
                 const swapTeamCheckbox = document.getElementById('swapTeamSeparator');
-
+                
                 initialTeamCheckbox.addEventListener('change', () => {
                     if (initialTeamCheckbox.checked) {
                         swapTeamCheckbox.checked = false; 
