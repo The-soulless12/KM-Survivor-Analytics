@@ -242,6 +242,8 @@
                 if (button.id === 'btnACP') {
                     image.style.visibility = 'visible';
                     image.setAttribute('href', './Graphiques/Résultats_ACP.png');
+                    seasonFilter.value = ""; 
+                    checkboxContainer.innerHTML = ''; 
                     filterContainer.style.display = 'block';
                     cardButtonsContainer.style.display = 'none';
                 } else if (button.id === 'btnDBSCAN') {
@@ -252,8 +254,14 @@
                 } else if (button.id === 'btnSOM') {
                     image.style.visibility = 'visible';
                     image.setAttribute('href', './Graphiques/carte_poids.png');
+                    // LA JE VAIS DEVOIR FAIRE EN SORTE D INITIALISER LES BOUTONS SUR POIDS !!!!!
                     filterContainer.style.display = 'none'; 
                     cardButtonsContainer.style.display = 'flex';
+                } else if (button.id === "btnDataset") {
+                    image.style.visibility = 'hidden';
+                    filterContainer.style.display = 'none'; 
+                    cardButtonsContainer.style.display = 'none';
+                    //c'est là que je dois afficher le KM_data.xlsx
                 } else {
                     image.style.visibility = 'hidden';
                     filterContainer.style.display = 'none'; 
@@ -290,6 +298,18 @@
                     <div style="margin-top: 5px;"></div>
                     <label><input type="checkbox" id="teamSeparator"> Équipes initiales </label>
                 `;
+
+                const teamCheckbox = document.getElementById('teamSeparator');
+                
+                teamCheckbox.addEventListener('change', () => {
+                    if (teamCheckbox.checked) { 
+                        image.setAttribute('href', `./Graphiques/equipes_saison_${season}.png`);
+                    }
+                    else {
+                        image.setAttribute('href', `./Graphiques/joueurs_saison_${season}.png`);
+                    }
+                });
+
             } else if (season >= 3 && season <= 9) {
                 checkboxContainer.innerHTML = `
                     <div style="margin-top: 5px;"></div>
@@ -305,12 +325,18 @@
                         swapTeamCheckbox.checked = false; 
                         image.setAttribute('href', `./Graphiques/equipes_saison_${season}.png`);
                     }
+                    else {
+                        image.setAttribute('href', `./Graphiques/joueurs_saison_${season}.png`);
+                    }
                 });
 
                 swapTeamCheckbox.addEventListener('change', () => {
                     if (swapTeamCheckbox.checked) {
                         initialTeamCheckbox.checked = false; 
                         image.setAttribute('href', `./Graphiques/equipes_swap_saison_${season}.png`);
+                    }
+                    else {
+                        image.setAttribute('href', `./Graphiques/joueurs_saison_${season}.png`);
                     }
                 });
             }
