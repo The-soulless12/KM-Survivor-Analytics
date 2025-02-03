@@ -131,6 +131,10 @@ p <- fviz_pca_ind(ACP,
 print(p)
 ggsave(paste0("./Graphiques/Résultats_ACP.png"), plot = p)
 
+# Ajout du nom des joueurs dans les graphiques
+d <- p + geom_text(aes(label = data$Joueur), size = 3, vjust = -0.5)
+print(d)
+
 # Projections des variables 
 r <- fviz_pca_var(ACP, 
              col.var = "black", 
@@ -160,8 +164,8 @@ for (season in 1:9) {
     coord <- ACP$ind$coord[index, ] 
     
     s <- s + 
-      annotate("point", x = coord[1], y = coord[2], color = "red", size = 4) +
-      annotate("text", x = coord[1], y = coord[2], label = name, vjust = -1, color = "red")
+      annotate("point", x = coord[1], y = coord[2], color = "red", size = 2) +
+      annotate("text", x = coord[1], y = coord[2], label = name, vjust = -1, color = "red", size = 3)
   }
   plots[[season]] <- s
   print(s)
@@ -207,8 +211,8 @@ for (season in 1:9) {
       color <- ifelse(team %in% names(season_colors[[key]]), season_colors[[key]][[team]], "black")
       
       s <- s + 
-        annotate("point", x = coord[1], y = coord[2], color = color, size = 4) +
-        annotate("text", x = coord[1], y = coord[2], label = name, vjust = -1, color = color)
+        annotate("point", x = coord[1], y = coord[2], color = color, size = 2) +
+        annotate("text", x = coord[1], y = coord[2], label = name, vjust = -1, color = color, size = 3)
     }
     
     plots[[length(plots) + 1]] <- s
@@ -258,7 +262,7 @@ data_som <- data %>%
   scale()  # Normalisation des données
 
 # Définition de la grille SOM
-som_grid <- somgrid(xdim = 5, ydim = 5, topo = "hexagonal")
+som_grid <- somgrid(xdim = 4, ydim = 4, topo = "hexagonal")
 som_model <- som(data_som, grid = som_grid, rlen = 100, alpha = c(0.05, 0.01))
 
 # Récapitulatif 
@@ -274,7 +278,7 @@ write.xlsx(recap_SOM, file = "./Tableaux/recap_SOM.xlsx")
 
 # Carte des Clusters
 png("Graphiques/carte_clusters.png")
-plot(som_model, type = "mapping", col = "white", main = "Carte des Clusters")
+plot(som_model, type = "mapping", col = "white", main = "Carte des Clusters") 
 neurone_coords <- som_model$grid$pts
 text(neurone_coords[, 1], neurone_coords[, 2], labels = recap_SOM$ID_Neurone, col = "red", cex = 1.2)
 dev.off()
